@@ -27,6 +27,7 @@ def generate_data(n_samples):
     promotion = np.random.choice(['Yes', 'No'], size=n_samples, p=[0.2, 0.8])
     special_event = np.random.choice(['Yes', 'No'], size=n_samples, p=[0.1, 0.9])
 
+    # correlations
     base_traffic = np.array([50 if t == 'Morning' else 80 if t == 'Afternoon' else 40 for t in time_of_day])
     weather_impact = np.array([10 if w == 'Sunny' else -20 if w == 'Rainy' else 0 for w in weather])
     promotion_impact = np.array([20 if p == 'Yes' else 0 for p in promotion])
@@ -68,6 +69,13 @@ if regenerate:
 # Ensure data exists in session state before displaying the split info
 if "data" in st.session_state:
     data = st.session_state["data"]
+    
+    st.title("Modeling and Simulation of Customer Traffic in a Cafe")
+    st.markdown(f"""This project aims to predict the peak hours for sales at a supposed cafe based on various factors. 
+                The goal of this project is to focus on modeling and simulation using Python by generating synthetic data and applying machine learning models. 
+                The goal is to gain hands-on experience with various libraries.""", unsafe_allow_html=True)
+    st.markdown(f'<br><font style="font-size: 12px;"> by De las Llagas, Llorente, and Aguilar </strong>', unsafe_allow_html=True)
+    st.divider()
 
     # Dataset Split Information only displayed after the data is generated or regenerated
     st.subheader("Dataset Split Information")
