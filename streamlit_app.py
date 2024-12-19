@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import os
+import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
@@ -10,6 +12,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.inspection import permutation_importance
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.stats import poisson, norm
 import plotly.express as px
@@ -132,7 +135,7 @@ def train_models(X_train, y_train, X_test, y_test, preprocessor):
             'model': model
         }
     return results
-
+st.divider()
 # Interactive visualization selection
 st.subheader("Data Visualizations")
 
@@ -386,7 +389,20 @@ simulated_traffic_normal = normal_simulation(mean_value, std_dev_value, n_sample
 
 b1,b2,b3 = st.columns([1,2,1])
 with b2:
+    # Compute permutation importance
+    results = permutation_importance(best_model, X, y, n_repeats=10, random_state=42)
+    st.header("Exploratory Data Analysis")
+    # Plot importance
+    st.subheader("Parameter Importance")
+    plt.bar(X.columns, results.importances_mean)
+    plt.ylabel('Importance')
+    plt.title('Feature Importance (Permutation)')
+    st.pyplot(plt)
+    st.divider()
+
     # Display scenario information
+
+    st.header("Evaluation and Analysis")
     st.subheader(f"Simulated Customer Traffic for '{scenario}' Scenario")
 
     # Create DataFrame for first 5 simulated values
@@ -398,6 +414,7 @@ with b2:
     # Display the table of the first 5 simulated traffic values
     st.write("##### First 5 Simulated Traffic Values")
     st.dataframe(traffic_data)
+    
 fig_center = st.columns([1,2,1])
 with fig_center[1]:
     # Visualization of simulated data
@@ -497,3 +514,30 @@ with normal_col:
     st.write(f"**Mean Absolute Error (MAE):** {mae:.2f}")
     st.write(f"**Mean Squared Error (MSE):** {mse:.2f}")
     st.write(f"**R² Score:** {r2:.2f}")
+
+
+# Function to save model to a file
+def save_model(model, model_name='best_model'):
+    model_filename = f'{model_name}.pkl'
+    with open(model_filename, 'wb') as f:
+        joblib.dump(model, f)
+    return model_filename
+
+def save_model(model, model_name='model.pkl'):
+    joblib.dump(model, model_name)
+    return model_name
+
+st.sidebar.divider()
+st.sidebar.subheader("Download Options")
+download_choice = st.sidebar.radio("Choose what to download", ("Dataset", "Trained Model"))
+
+download_button = st.sidebar.button("Download")
+
+if download_button:
+    if download_choice == "Dataset":
+        # Convert dataset to CSV and allow download
+        csv = data.to_csv(index=False)
+        st.sidebar.download_button(label="Download Dataset as CSV", data=csv, file_name="cafe_customer_traffic.csv", mime="text/csv")
+    elif download_choice == "Trained Model":
+        model_filename = save_model(best_model, model_name='cafe_traffic_model.pkl')
+        st.sidebar.download_button(label="Download Trained Model", data=open(model_filename, 'rb').read(), file_name=model_filename, mime="application/octet-stream")
