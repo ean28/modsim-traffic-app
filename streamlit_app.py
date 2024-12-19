@@ -137,6 +137,7 @@ def train_models(X_train, y_train, X_test, y_test, preprocessor):
     return results
 st.divider()
 # Interactive visualization selection
+st.header("Exploratory Data Analysis")
 st.subheader("Data Visualizations")
 
 # Create radio buttons for 2D or 3D selection
@@ -297,6 +298,29 @@ with col2:
             )
             st.plotly_chart(fig2)
 
+# Convert categorical columns to numeric using one-hot encoding
+data_encoded = pd.get_dummies(data, drop_first=True)
+
+# Calculate the correlation matrix on the encoded data
+corr = data_encoded.corr()
+
+# Plot heatmap
+st.subheader("Correlation Heatmap")
+
+fig, ax = plt.subplots(figsize=(8, 6))
+sns.heatmap(corr, annot=True, cmap="coolwarm", fmt=".2f", ax=ax, linewidths=0.5)
+ax.set_title("Correlation Heatmap")
+st.pyplot(fig)
+st.write("""
+The correlation heatmap shows how strongly features in the dataset are related to each other:
+
+- **Positive correlation** (close to +1) means both variables increase together.
+- **Negative correlation** (close to -1) means as one variable increases, the other decreases.
+- **No correlation** (close to 0) means there is no linear relationship between the variables.
+
+This helps identify important relationships for further analysis or modeling.
+""")
+
 # Train-test split
 X, y, preprocessor = preprocess_data(data)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
@@ -313,6 +337,22 @@ st.table(comparison)
 best_model_name = comparison['R²'].idxmax()
 best_model = model_results[best_model_name]['model']
 st.write(f"**Best Model:** {best_model_name} with R² = {comparison.loc[best_model_name, 'R²']:.2f}")
+
+if isinstance(best_model, LinearRegression):
+    st.write("The chosen model is Linear Regression.")
+    st.write("Model Coefficients:")
+    st.write(best_model.coef_)
+    st.write("Model Intercept:")
+    st.write(best_model.intercept_)
+elif isinstance(best_model, RandomForestRegressor):
+    st.write("The chosen model is Random Forest.")
+    st.write("Feature Importances:")
+    st.write(best_model.feature_importances_)
+elif best_model is not None:
+    st.write("Both model was selected and trained.")
+else:
+    st.write("No model was trained successfully.")
+
 st.divider()
 
 # Simulation
@@ -389,17 +429,19 @@ simulated_traffic_normal = normal_simulation(mean_value, std_dev_value, n_sample
 
 b1,b2,b3 = st.columns([1,2,1])
 with b2:
+    ############################
+    
     # Compute permutation importance
-    results = permutation_importance(best_model, X, y, n_repeats=10, random_state=42)
-    st.header("Exploratory Data Analysis")
-    # Plot importance
-    st.subheader("Parameter Importance")
-    plt.bar(X.columns, results.importances_mean)
-    plt.ylabel('Importance')
-    plt.title('Feature Importance (Permutation)')
-    st.pyplot(plt)
-    st.divider()
+    #results = permutation_importance(best_model, X, y, n_repeats=10, random_state=42)
 
+    # Plot importance
+    #st.subheader("Parameter Importance")
+    #plt.bar(X.columns, results.importances_mean)
+    #plt.ylabel('Importance')
+    #plt.title('Feature Importance (Permutation)')
+    #st.pyplot(plt)
+    #st.divider()
+#################################
     # Display scenario information
 
     st.header("Evaluation and Analysis")
